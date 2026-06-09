@@ -1393,3 +1393,43 @@
   display: inline-block;
 }
 
+/* ── SMOOTH SNAP TO HEADER MARGIN ── */
+.category-section {
+  scroll-margin-top: calc(var(--hdr) + 12px);
+}
+
+/* ── TRANSPARENT RAINBOW CATEGORIES ── */
+#cat-alkol {
+  background: rgba(201, 168, 76, 0.03) !important; /* Gold */
+  border-color: rgba(201, 168, 76, 0.12) !important;
+}
+#cat-soft {
+  background: rgba(91, 164, 201, 0.03) !important; /* Aegean Blue */
+  border-color: rgba(91, 164, 201, 0.12) !important;
+}
+#cat-sicak {
+  background: rgba(139, 125, 107, 0.03) !important; /* Stone */
+  border-color: rgba(139, 125, 107, 0.12) !important;
+}
+#cat-kuru {
+  background: rgba(232, 99, 42, 0.03) !important; /* Orange */
+  border-color: rgba(232, 99, 42, 0.12) !important;
+}
+#cat-destek {
+  background: rgba(92, 184, 122, 0.03) !important; /* Green */
+  border-color: rgba(92, 184, 122, 0.12) !important;
+}
+
+/* ── PRODUCT LIST ZEBRA STRIPING ── */
+.category-body .product-item:nth-of-type(odd) {
+  background: rgba(255, 255, 255, 0.01) !important;
+}
+
+.category-body .product-item:nth-of-type(even) {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.category-body .product-item.has-qty {
+  background: rgba(92, 184, 122, 0.04) !important;
+}
+

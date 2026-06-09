@@ -342,6 +342,16 @@ export function toggleCategory(catId) {
   }
   
   renderOrderView();
+
+  // Smooth scroll snap to top header margin if expanded
+  if (isCurrentlyCollapsed) {
+    setTimeout(() => {
+      const sectionEl = document.getElementById('cat-' + catId);
+      if (sectionEl) {
+        sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
+  }
 }
 
 function isCategoryCollapsed(catId) {
