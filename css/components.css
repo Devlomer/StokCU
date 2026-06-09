@@ -921,3 +921,446 @@
   border-color: var(--red);
   color: var(--red);
 }
+
+/* ── HEADER BLOCK BUTTON ── */
+.header-block-btn {
+  background: var(--input);
+  border: 1px solid var(--border2);
+  color: var(--t2);
+  padding: 6px 12px;
+  border-radius: var(--rx);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 8px;
+}
+
+.header-block-btn.selected {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--lujo-orange);
+}
+
+.header-block-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── QUANTITY INPUT FIELD ── */
+.qty-input {
+  width: 44px;
+  height: 36px;
+  background: var(--input);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  color: var(--t3);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.15s;
+  -moz-appearance: textfield;
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-input.active {
+  color: var(--green);
+  border-color: rgba(92, 184, 122, 0.3);
+  background: rgba(92, 184, 122, 0.04);
+}
+
+.qty-input:focus {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(92, 184, 122, 0.08);
+}
+
+.product-box-qty {
+  font-size: 10px;
+  color: var(--t3);
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* ── ADMIN VIEWS & LOGIN ── */
+.admin-login-card {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 30px 24px;
+  background: var(--card-solid);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.login-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.admin-login-card h2 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: var(--t1);
+}
+
+.admin-login-card p {
+  font-size: 12.5px;
+  color: var(--t3);
+  margin-bottom: 24px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-form input {
+  padding: 14px;
+  background: var(--input);
+  border: 1px solid var(--border2);
+  border-radius: var(--rx);
+  color: var(--t1);
+  font-size: 14px;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.login-form input:focus {
+  border-color: var(--accent);
+}
+
+.login-form button {
+  padding: 14px;
+  background: linear-gradient(135deg, var(--lujo-orange), var(--lujo-orange-warm));
+  border: none;
+  border-radius: var(--rx);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-form button:active {
+  transform: scale(0.97);
+}
+
+/* ── ADMIN HEADER & TABS ── */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 4px;
+}
+
+.btn-logout {
+  background: var(--red-bg);
+  border: 1px solid rgba(232, 90, 79, 0.2);
+  color: var(--red);
+  padding: 6px 12px;
+  border-radius: var(--rx);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-logout:active {
+  background: var(--red);
+  color: #fff;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+  padding-bottom: 10px;
+}
+
+.admin-tab-btn {
+  flex: 1;
+  padding: 10px;
+  background: var(--input);
+  border: 1px solid var(--border2);
+  border-radius: var(--rx);
+  color: var(--t2);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-tab-btn.active {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--lujo-orange);
+}
+
+/* ── ADMIN SECTIONS & PREPARATION BOARD ── */
+.admin-card-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--t1);
+  margin-bottom: 8px;
+}
+
+.aggregated-box {
+  padding: 12px;
+}
+
+.agg-category {
+  margin-bottom: 12px;
+}
+
+.agg-category:last-child {
+  margin-bottom: 0;
+}
+
+.agg-cat-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lujo-orange);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.agg-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0 4px 8px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.agg-item-name {
+  color: var(--t2);
+}
+
+.agg-item-qty {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--t1);
+}
+
+/* ── INDIVIDUAL BLOCK REQUEST CARDS ── */
+.admin-req-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.admin-req-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.01);
+}
+
+.admin-req-card-block {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.admin-req-card-time {
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 2px;
+}
+
+.btn-complete-req {
+  background: var(--green-bg);
+  border: 1px solid rgba(92, 184, 122, 0.2);
+  color: var(--green);
+  padding: 6px 12px;
+  border-radius: var(--rx);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-complete-req:active {
+  background: var(--green);
+  color: #fff;
+}
+
+.admin-req-card-body {
+  padding: 10px 14px;
+}
+
+.req-detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--t2);
+}
+
+/* ── ADMIN EDITING SETTINGS PANEL ── */
+.admin-settings-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.settings-cat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-input {
+  background: var(--input);
+  border: 1px solid var(--border2);
+  border-radius: var(--rx);
+  color: var(--t1);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.settings-input.cat-emoji {
+  width: 44px;
+  text-align: center;
+}
+
+.settings-input.cat-name {
+  font-weight: bold;
+}
+
+.settings-input.prod-name {
+  font-weight: 600;
+}
+
+.settings-input:focus,
+.settings-select:focus {
+  border-color: var(--accent);
+}
+
+.settings-label {
+  font-size: 10px;
+  color: var(--t3);
+  font-weight: 600;
+}
+
+.settings-select {
+  background: var(--input);
+  border: 1px solid var(--border2);
+  border-radius: var(--rx);
+  color: var(--t2);
+  font-size: 11px;
+  padding: 5px;
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.sort-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.sort-btns button {
+  width: 24px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--input);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--t2);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.sort-btns button:disabled {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.btn-delete-cat,
+.btn-delete-prod {
+  background: rgba(232, 90, 79, 0.1) !important;
+  border-color: rgba(232, 90, 79, 0.2) !important;
+  color: var(--red) !important;
+}
+
+.btn-delete-cat {
+  height: 42px !important;
+  font-size: 11px !important;
+}
+
+.settings-cat-body {
+  padding: 10px 12px;
+}
+
+.settings-prod-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-prod-item:last-of-type {
+  border-bottom: none;
+}
+
+.btn-add-item {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: var(--rx);
+  color: var(--t2);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.btn-add-item:active {
+  background: var(--input);
+}
+
+.settings-desc {
+  font-size: 12px;
+  color: var(--t3);
+  line-height: 1.5;
+}
+

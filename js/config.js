@@ -1,5 +1,5 @@
 // StokCU — Product Database & Configuration
-// All 36 minibar products organized in 5 categories
+// All 36 minibar products organized in 5 categories with default box quantities
 
 export const STORAGE_KEY = 'stokcu';
 
@@ -9,10 +9,10 @@ export const CATEGORIES = [
     name: 'Alkollü İçecekler',
     emoji: '🍺',
     products: [
-      'BIRA SISE EFES 33CL',
-      'BIRA SISE HEINEKEN 33CL',
-      'SARAP R SUVLA CABERNET SAUVIGNON KARASAKIZ 75CL',
-      'SARAP RY SARTORI BLUSH 75 CL'
+      { name: 'BIRA SISE EFES 33CL', boxQty: 24 },
+      { name: 'BIRA SISE HEINEKEN 33CL', boxQty: 24 },
+      { name: 'SARAP R SUVLA CABERNET SAUVIGNON KARASAKIZ 75CL', boxQty: 6 },
+      { name: 'SARAP RY SARTORI BLUSH 75 CL', boxQty: 6 }
     ]
   },
   {
@@ -20,16 +20,16 @@ export const CATEGORIES = [
     name: 'Soft İçecekler',
     emoji: '🥤',
     products: [
-      'COCA COLA SISE CAM 25CL - ORIGINAL',
-      'COCA COLA SISE CAM 25CL - ZERO',
-      'FANTA KUTU 33CL',
-      'SPRITE KUTU 33CL',
-      'FUSE TEA KUTU 33CL - SEFTALI',
-      'GAZOZ BODRUM MANDALINA 25CL',
-      'SODA SAN PELLEGRINO 25CL - SADE',
-      'SUT 20CL - SADE',
-      'SU CAM 33CL',
-      'SU CAM 75CL'
+      { name: 'COCA COLA SISE CAM 25CL - ORIGINAL', boxQty: 24 },
+      { name: 'COCA COLA SISE CAM 25CL - ZERO', boxQty: 24 },
+      { name: 'FANTA KUTU 33CL', boxQty: 24 },
+      { name: 'SPRITE KUTU 33CL', boxQty: 24 },
+      { name: 'FUSE TEA KUTU 33CL - SEFTALI', boxQty: 24 },
+      { name: 'GAZOZ BODRUM MANDALINA 25CL', boxQty: 24 },
+      { name: 'SODA SAN PELLEGRINO 25CL - SADE', boxQty: 24 },
+      { name: 'SUT 20CL - SADE', boxQty: 24 },
+      { name: 'SU CAM 33CL', boxQty: 24 },
+      { name: 'SU CAM 75CL', boxQty: 12 }
     ]
   },
   {
@@ -37,11 +37,11 @@ export const CATEGORIES = [
     name: 'Sıcak İçecekler',
     emoji: '☕',
     products: [
-      'CAY POSET MELEZ TEA - BLACK 2GR',
-      'CAY POSET MELEZ TEA - CAMOMILE 2GR',
-      'CAY POSET MELEZ TEA - GREEN 2GR',
-      'CAY POSET MELEZ TEA - WAKE UP 2GR',
-      'KAHVE NESPRESSO KAPSUL 5GR'
+      { name: 'CAY POSET MELEZ TEA - BLACK 2GR', boxQty: 20 },
+      { name: 'CAY POSET MELEZ TEA - CAMOMILE 2GR', boxQty: 20 },
+      { name: 'CAY POSET MELEZ TEA - GREEN 2GR', boxQty: 20 },
+      { name: 'CAY POSET MELEZ TEA - WAKE UP 2GR', boxQty: 20 },
+      { name: 'KAHVE NESPRESSO KAPSUL 5GR', boxQty: 50 }
     ]
   },
   {
@@ -49,20 +49,20 @@ export const CATEGORIES = [
     name: 'Kuru Gıda & Atıştırmalıklar',
     emoji: '🍫',
     products: [
-      'MINIBAR BAR PROTEIN BAHS 60GR',
-      'MINIBAR BISKUVI LOTUS BISCOFF 125GR',
-      'MINIBAR BISKUVI OREO MINI BARDAK 115GR',
-      'MINIBAR CIKOLATA JOVIA 40GR',
-      'MINIBAR CIKOLATA RAFAELLO 40GR',
-      'MINIBAR CIPS BREAD UNISTANBUL 110GR',
-      'MINIBAR CIPS MASTER POTATO 60GR',
-      'MINIBAR GOFRET NUTELLA B-READY 22GR',
-      'MINIBAR KURABIYE TAFE BARAZEK 55GR',
-      'MINIBAR KURABIYE TAFE BISCOTTI YABAN MERSINI BADEM 60GR',
-      'MINIBAR KURABIYE TAFE PURE BUTTER 50GR',
-      'MINIBAR KURUYEMIS BADEM 50GR (Logolu)',
-      'MINIBAR KURUYEMIS FINDIK 50GR (Logolu)',
-      'MINIBAR SANDWICH WASA 30GR'
+      { name: 'MINIBAR BAR PROTEIN BAHS 60GR', boxQty: 12 },
+      { name: 'MINIBAR BISKUVI LOTUS BISCOFF 125GR', boxQty: 10 },
+      { name: 'MINIBAR BISKUVI OREO MINI BARDAK 115GR', boxQty: 12 },
+      { name: 'MINIBAR CIKOLATA JOVIA 40GR', boxQty: 20 },
+      { name: 'MINIBAR CIKOLATA RAFAELLO 40GR', boxQty: 16 },
+      { name: 'MINIBAR CIPS BREAD UNISTANBUL 110GR', boxQty: 15 },
+      { name: 'MINIBAR CIPS MASTER POTATO 60GR', boxQty: 14 },
+      { name: 'MINIBAR GOFRET NUTELLA B-READY 22GR', boxQty: 24 },
+      { name: 'MINIBAR KURABIYE TAFE BARAZEK 55GR', boxQty: 12 },
+      { name: 'MINIBAR KURABIYE TAFE BISCOTTI YABAN MERSINI BADEM 60GR', boxQty: 12 },
+      { name: 'MINIBAR KURABIYE TAFE PURE BUTTER 50GR', boxQty: 12 },
+      { name: 'MINIBAR KURUYEMIS BADEM 50GR (Logolu)', boxQty: 30 },
+      { name: 'MINIBAR KURUYEMIS FINDIK 50GR (Logolu)', boxQty: 30 },
+      { name: 'MINIBAR SANDWICH WASA 30GR', boxQty: 20 }
     ]
   },
   {
@@ -70,9 +70,9 @@ export const CATEGORIES = [
     name: 'Destekleyici Ürünler',
     emoji: '🍬',
     products: [
-      'SEKER STICK - BEYAZ (Logolu)',
-      'SEKER STICK - ESMER (Logolu)',
-      'SEKER STICK - SAKARIN (Logolu)'
+      { name: 'SEKER STICK - BEYAZ (Logolu)', boxQty: 500 },
+      { name: 'SEKER STICK - ESMER (Logolu)', boxQty: 500 },
+      { name: 'SEKER STICK - SAKARIN (Logolu)', boxQty: 500 }
     ]
   }
 ];

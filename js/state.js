@@ -1,15 +1,39 @@
 // StokCU — State Management & LocalStorage CRUD
-import { STORAGE_KEY, CATEGORIES } from './config.js';
+import { STORAGE_KEY, CATEGORIES as staticCategories } from './config.js';
+import { fetchProductsFromDb } from './firebase.js';
 
 // Current order quantities: { 'PRODUCT_NAME': qty, ... }
 export const orderState = {};
 
-// Initialize orderState with all products at 0
+// Dynamically synchronized categories (starts with static config)
+export let CATEGORIES = JSON.parse(JSON.stringify(staticCategories));
+
+// Selected block (1-2, 3-4, 5-6, 8-9)
+export let activeBlock = localStorage.getItem(STORAGE_KEY + '_block') || '';
+
+export function setActiveBlock(block) {
+  activeBlock = block;
+  localStorage.setItem(STORAGE_KEY + '_block', block);
+}
+
+// Sync categories list with Firebase database
+export async function syncCategories() {
+  const dbCats = await fetchProductsFromDb();
+  if (dbCats && dbCats.length > 0) {
+    CATEGORIES = dbCats;
+    initOrderState();
+    return true;
+  }
+  return false;
+}
+
+// Initialize orderState with all products at 0 (preserves existing quantities)
 export function initOrderState() {
   for (const cat of CATEGORIES) {
     for (const p of cat.products) {
-      if (!(p in orderState)) {
-        orderState[p] = 0;
+      const pName = typeof p === 'string' ? p : p.name;
+      if (!(pName in orderState)) {
+        orderState[pName] = 0;
       }
     }
   }
@@ -18,6 +42,7 @@ export function initOrderState() {
 // Set quantity for a product
 export function setQty(productName, qty) {
   orderState[productName] = Math.max(0, qty);
+  saveActiveOrderToStorage();
 }
 
 // Get quantity for a product
@@ -31,8 +56,11 @@ export function getSelectedItems() {
   for (const cat of CATEGORIES) {
     const items = [];
     for (const p of cat.products) {
-      if (orderState[p] > 0) {
-        items.push({ name: p, qty: orderState[p] });
+      const pName = typeof p === 'string' ? p : p.name;
+      const pBoxQty = typeof p === 'string' ? 0 : p.boxQty;
+      const qty = orderState[pName] || 0;
+      if (qty > 0) {
+        items.push({ name: pName, qty, boxQty: pBoxQty });
       }
     }
     if (items.length > 0) {
@@ -60,6 +88,7 @@ export function clearAll() {
   for (const key in orderState) {
     orderState[key] = 0;
   }
+  saveActiveOrderToStorage();
 }
 
 // Load quantities from an order (for "repeat" feature)
@@ -69,6 +98,27 @@ export function loadOrder(items) {
     if (item.name in orderState) {
       orderState[item.name] = item.qty;
     }
+  }
+  saveActiveOrderToStorage();
+}
+
+// ── LocalStorage: Persistence ──
+
+export function saveActiveOrderToStorage() {
+  localStorage.setItem(STORAGE_KEY + '_active', JSON.stringify(orderState));
+}
+
+export function loadActiveOrderFromStorage() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY + '_active');
+    if (data) {
+      const parsed = JSON.parse(data);
+      for (const k in parsed) {
+        orderState[k] = parsed[k];
+      }
+    }
+  } catch {
+    // Ignore error
   }
 }
 

@@ -28,9 +28,10 @@
         </span><span class="logo-oy">oy</span><span class="logo-ops">ops</span>
       </div>
       <span class="logo-separator">|</span>
-      <h1>StokCU <span class="app-version">v1.0</span></h1>
+      <h1>StokCU <span class="app-version">v1.1</span></h1>
     </div>
     <div class="header-right">
+      <button class="header-block-btn" id="header-block-btn" onclick="window.app.openBlockModal()">Blok Seç</button>
       <span id="header-clock" class="header-clock"></span>
     </div>
   </header>
@@ -47,6 +48,9 @@
     <!-- VIEW: Geçmiş Talepler -->
     <section id="view-history" class="view"></section>
 
+    <!-- VIEW: Admin Paneli -->
+    <section id="view-admin" class="view"></section>
+
   </div>
 
   <!-- Floating Action Bar -->
@@ -61,6 +65,7 @@
   <nav class="bottom-nav">
     <button class="nav-btn" data-view="order" onclick="window.app.switchView('order')">📦<span>Sipariş</span></button>
     <button class="nav-btn" data-view="history" onclick="window.app.switchView('history')">📜<span>Geçmiş</span></button>
+    <button class="nav-btn" data-view="admin" onclick="window.app.switchView('admin')">🔒<span>Yönetim</span></button>
   </nav>
 
   <!-- Summary Modal -->
@@ -74,11 +79,45 @@
       <div class="sheet-subtitle" id="summary-date"></div>
       <div class="sheet-body" id="summary-body"></div>
       <div class="sheet-actions">
-        <button class="btn-copy" id="btn-copy" onclick="window.app.copyOrder()">📋 Panoya Kopyala</button>
+        <button class="btn-copy" id="btn-submit" onclick="window.app.submitOrder()">🚀 Şefe Gönder</button>
+        <button class="btn-copy" id="btn-copy" onclick="window.app.copyOrder()" style="background: var(--input); border: 1px solid var(--border2); color: var(--t1); margin-top: 4px; box-shadow: none;">📋 Panoya Kopyala</button>
         <button class="btn-clear" onclick="window.app.clearAndClose()">🗑️ Temizle & Kapat</button>
       </div>
     </div>
   </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="bottom-sheet" style="min-height: auto;">
+      <div class="sheet-title" id="confirm-title">Emin misiniz?</div>
+      <div class="sheet-subtitle" id="confirm-message">Bu işlem geri alınamaz.</div>
+      <div class="sheet-actions" style="margin-top: 12px;">
+        <button class="btn-copy" id="confirm-yes-btn">Evet</button>
+        <button class="btn-clear" id="confirm-no-btn" style="margin-top: 8px;">İptal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Block Modal -->
+  <div id="block-modal" class="modal-overlay" onclick="window.app.closeBlockModal(event)">
+    <div class="bottom-sheet" onclick="event.stopPropagation()" style="min-height: auto;">
+      <div class="sheet-header">
+        <div class="sheet-handle"></div>
+        <button class="sheet-close-btn" onclick="window.app.closeBlockModal()">✕</button>
+      </div>
+      <div class="sheet-title">🏢 Blok Seçin</div>
+      <div class="sheet-subtitle">Talebin hangi bloğa ait olduğunu seçin.</div>
+      <div class="block-selector-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0;">
+        <button class="btn-clear" style="color: var(--t1); border-color: var(--border2); background: var(--input); padding: 16px; font-weight: bold;" onclick="window.app.selectBlock('1-2')">1-2 Bloğu</button>
+        <button class="btn-clear" style="color: var(--t1); border-color: var(--border2); background: var(--input); padding: 16px; font-weight: bold;" onclick="window.app.selectBlock('3-4')">3-4 Bloğu</button>
+        <button class="btn-clear" style="color: var(--t1); border-color: var(--border2); background: var(--input); padding: 16px; font-weight: bold;" onclick="window.app.selectBlock('5-6')">5-6 Bloğu</button>
+        <button class="btn-clear" style="color: var(--t1); border-color: var(--border2); background: var(--input); padding: 16px; font-weight: bold;" onclick="window.app.selectBlock('8-9')">8-9 Bloğu</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
   <script type="module" src="js/main.js"></script>
 

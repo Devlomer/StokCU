@@ -1,7 +1,8 @@
 // StokCU — Order View (Product selection with accordion categories)
-import { CATEGORIES } from '../../config.js';
-import { orderState, getQty, setQty, getTotals, getSelectedItems, clearAll, saveToHistory } from '../../state.js';
+import { CATEGORIES, activeBlock, getQty, setQty, getTotals, getSelectedItems, clearAll, saveToHistory } from '../../state.js';
 import { toast } from '../toast.js';
+import { escapeHtml, formatOrder, renderSummaryDetailsHtml, showConfirm } from '../../utils.js';
+import { sendRequestToDb } from '../../firebase.js';
 
 let searchQuery = '';
 
@@ -44,7 +45,7 @@ export function renderOrderView() {
     if (searchQuery && filteredProducts.length === 0) continue;
 
     const productsToShow = searchQuery ? filteredProducts : cat.products;
-    const selectedCount = productsToShow.filter(p => getQty(p) > 0).length;
+    const selectedCount = productsToShow.filter(p => getQty(p.name) > 0).length;
     const isCollapsed = !searchQuery && isCategoryCollapsed(cat.id);
 
     html += `
@@ -85,27 +86,49 @@ export function renderOrderView() {
   }
 }
 
-function renderProductItem(name) {
+function renderProductItem(p) {
+  const name = typeof p === 'string' ? p : p.name;
+  const boxQty = typeof p === 'string' ? 0 : p.boxQty;
   const qty = getQty(name);
   const hasQty = qty > 0;
   const productId = nameToId(name);
+  const boxText = boxQty > 0 ? `<span class="product-box-qty">(${boxQty}'li Koli)</span>` : '';
 
   return `
     <div class="product-item ${hasQty ? 'has-qty' : ''}" id="product-${productId}">
-      <div class="product-name">${escapeHtml(name)}</div>
+      <div class="product-name">
+        ${escapeHtml(name)}
+        ${boxText}
+      </div>
       <div class="qty-control">
         <button class="qty-btn minus" onclick="window.app.changeQty('${escapeAttr(name)}', -1)" ${!hasQty ? 'style="opacity:.3;pointer-events:none"' : ''}>−</button>
-        <span class="qty-value ${hasQty ? 'active' : ''}" id="qty-${productId}">${qty}</span>
+        <input type="number" class="qty-input ${hasQty ? 'active' : ''}" id="qty-${productId}" 
+               value="${qty}" onfocus="this.select()"
+               onchange="window.app.handleQtyInputChange('${escapeAttr(name)}', this.value)" min="0">
         <button class="qty-btn plus" onclick="window.app.changeQty('${escapeAttr(name)}', 1)">+</button>
       </div>
     </div>
   `;
 }
 
-// ── Quantity Change (optimized, no full re-render) ──
+// ── Quantity Change & Manual Editing ──
 export function changeQty(name, delta) {
   const oldQty = getQty(name);
   const newQty = Math.max(0, oldQty + delta);
+  setProductQtyDirectly(name, newQty);
+
+  // Pulse animation on quantity change
+  const productId = nameToId(name);
+  const qtyEl = document.getElementById('qty-' + productId);
+  if (qtyEl) {
+    qtyEl.classList.remove('pulse');
+    void qtyEl.offsetWidth; // Force reflow
+    qtyEl.classList.add('pulse');
+  }
+}
+
+export function setProductQtyDirectly(name, qty) {
+  const newQty = Math.max(0, qty);
   setQty(name, newQty);
 
   const productId = nameToId(name);
@@ -113,12 +136,8 @@ export function changeQty(name, delta) {
   const qtyEl = document.getElementById('qty-' + productId);
 
   if (qtyEl) {
-    qtyEl.textContent = newQty;
+    qtyEl.value = newQty;
     qtyEl.classList.toggle('active', newQty > 0);
-    // Pulse animation
-    qtyEl.classList.remove('pulse');
-    void qtyEl.offsetWidth; // Force reflow
-    qtyEl.classList.add('pulse');
   }
 
   if (itemEl) {
@@ -143,8 +162,9 @@ export function changeQty(name, delta) {
 
 function updateCategoryBadge(productName) {
   for (const cat of CATEGORIES) {
-    if (cat.products.includes(productName)) {
-      const count = cat.products.filter(p => getQty(p) > 0).length;
+    const isMatched = cat.products.some(p => (typeof p === 'string' ? p : p.name) === productName);
+    if (isMatched) {
+      const count = cat.products.filter(p => getQty(typeof p === 'string' ? p : p.name) > 0).length;
       const badge = document.getElementById('badge-' + cat.id);
       if (badge) {
         badge.textContent = count + ' seçili';
@@ -195,7 +215,10 @@ export function clearSearch() {
 function filterProducts(products) {
   if (!searchQuery) return products;
   const q = normalizeForSearch(searchQuery);
-  return products.filter(p => normalizeForSearch(p).includes(q));
+  return products.filter(p => {
+    const name = typeof p === 'string' ? p : p.name;
+    return normalizeForSearch(name).includes(q);
+  });
 }
 
 function normalizeForSearch(str) {
@@ -230,10 +253,16 @@ function isCategoryCollapsed(catId) {
 }
 
 // ── Clear All ──
-export function clearAllQty() {
-  clearAll();
-  renderOrderView();
-  toast('Tüm ürünler temizlendi', 'success');
+export async function clearAllQty() {
+  const confirmed = await showConfirm({
+    title: '🗑️ Tümünü Temizle',
+    message: 'Seçili tüm ürün miktarlarını sıfırlamak istediğinize emin misiniz?'
+  });
+  if (confirmed) {
+    clearAll();
+    renderOrderView();
+    toast('Tüm ürünler temizlendi', 'success');
+  }
 }
 
 // ── Summary Modal: Open ──
@@ -249,20 +278,14 @@ export function openSummaryModal() {
   const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
-  let bodyHtml = '';
+  const allItems = [];
   for (const group of selected) {
-    bodyHtml += `
-      <div class="summary-category">
-        <div class="summary-category-title">${group.emoji} ${group.category}</div>
-        ${group.items.map(item => `
-          <div class="summary-item">
-            <span class="summary-item-name">${escapeHtml(item.name)}</span>
-            <span class="summary-item-qty">× ${item.qty}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    for (const item of group.items) {
+      allItems.push({ name: item.name, qty: item.qty, boxQty: item.boxQty, category: group.category, emoji: group.emoji });
+    }
   }
+
+  let bodyHtml = renderSummaryDetailsHtml(allItems);
 
   bodyHtml += `
     <div class="summary-total">
@@ -289,6 +312,77 @@ export function closeSummaryModal(event) {
   document.getElementById('summary-modal').classList.remove('active');
 }
 
+// ── Submit Order to Firebase & Copy to Clipboard ──
+export async function submitOrder() {
+  if (!activeBlock) {
+    toast('Lütfen önce bir blok seçin!', 'error');
+    window.app.openBlockModal();
+    return;
+  }
+
+  const selected = getSelectedItems();
+  if (selected.length === 0) return;
+
+  const { totalItems, totalQty } = getTotals();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+  const allItems = [];
+  for (const group of selected) {
+    for (const item of group.items) {
+      allItems.push({
+        name: item.name,
+        qty: item.qty,
+        boxQty: item.boxQty,
+        category: group.category,
+        emoji: group.emoji
+      });
+    }
+  }
+
+  const orderObj = {
+    timestamp: Date.now(),
+    date: dateStr,
+    time: timeStr,
+    block: activeBlock,
+    totalItems,
+    totalQty,
+    items: allItems
+  };
+
+  try {
+    let sentToDb = false;
+    try {
+      await sendRequestToDb(orderObj);
+      sentToDb = true;
+    } catch (dbErr) {
+      console.warn('Could not upload to Firebase DB:', dbErr);
+    }
+
+    // Format and copy to clipboard
+    const text = formatOrder(orderObj);
+    await navigator.clipboard.writeText(text);
+
+    // Save locally
+    saveToHistory(orderObj);
+
+    // Clear and close
+    clearAll();
+    closeSummaryModal();
+    renderOrderView();
+
+    if (sentToDb) {
+      toast('🚀 Talep şefe gönderildi ve kopyalandı!', 'success');
+    } else {
+      toast('📋 İnternet yok/Kurulum eksik. Talep kopyalandı!', 'warning');
+    }
+  } catch (err) {
+    console.error(err);
+    toast('Gönderim başarısız!', 'error');
+  }
+}
+
 // ── Copy to Clipboard ──
 export function copyOrder() {
   const selected = getSelectedItems();
@@ -299,34 +393,32 @@ export function copyOrder() {
   const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
-  let text = `📦 STOK TALEBİ — ${dateStr} ${timeStr}\n`;
-
+  const allItems = [];
   for (const group of selected) {
-    text += `\n${group.emoji} ${group.category}\n`;
     for (const item of group.items) {
-      text += `• ${item.name} → ${item.qty}\n`;
+      allItems.push({
+        name: item.name,
+        qty: item.qty,
+        boxQty: item.boxQty,
+        category: group.category,
+        emoji: group.emoji
+      });
     }
   }
 
-  text += `\n━━━━━━━━━━━━━━━\nToplam: ${totalItems} kalem | ${totalQty} adet`;
+  const orderObj = {
+    timestamp: Date.now(),
+    date: dateStr,
+    time: timeStr,
+    block: activeBlock || 'Seçilmedi',
+    totalItems,
+    totalQty,
+    items: allItems
+  };
+
+  const text = formatOrder(orderObj);
 
   navigator.clipboard.writeText(text).then(() => {
-    // Save to history
-    const allItems = [];
-    for (const group of selected) {
-      for (const item of group.items) {
-        allItems.push({ name: item.name, qty: item.qty, category: group.category, emoji: group.emoji });
-      }
-    }
-    saveToHistory({
-      timestamp: Date.now(),
-      date: dateStr,
-      time: timeStr,
-      totalItems,
-      totalQty,
-      items: allItems
-    });
-
     // UI feedback
     const copyBtn = document.getElementById('btn-copy');
     if (copyBtn) {
@@ -338,7 +430,7 @@ export function copyOrder() {
       }, 2000);
     }
 
-    toast('📋 Talep kopyalandı — WhatsApp\'a yapıştır!', 'success');
+    toast('📋 Talep panoya kopyalandı!', 'success');
   }).catch(() => {
     toast('Kopyalama başarısız!', 'error');
   });
@@ -355,10 +447,6 @@ export function clearAndClose() {
 // ── Helpers ──
 function nameToId(name) {
   return name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-}
-
-function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function escapeAttr(str) {

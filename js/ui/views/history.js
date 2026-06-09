@@ -3,6 +3,7 @@ import { getHistory, clearHistory, loadOrder } from '../../state.js';
 import { renderOrderView } from './order.js';
 import { switchView } from '../navigation.js';
 import { toast } from '../toast.js';
+import { escapeHtml, formatOrder, renderSummaryDetailsHtml, showConfirm } from '../../utils.js';
 
 export function renderHistoryView() {
   const container = document.getElementById('view-history');
@@ -48,26 +49,7 @@ export function renderHistoryView() {
 }
 
 function renderHistoryCard(order, index) {
-  // Group items by category for detail view
-  const grouped = {};
-  for (const item of order.items) {
-    const key = (item.emoji || '📦') + ' ' + (item.category || 'Diğer');
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(item);
-  }
-
-  let detailHtml = '';
-  for (const [catTitle, items] of Object.entries(grouped)) {
-    detailHtml += `<div class="summary-category">
-      <div class="summary-category-title">${escapeHtml(catTitle)}</div>
-      ${items.map(item => `
-        <div class="summary-item">
-          <span class="summary-item-name">${escapeHtml(item.name)}</span>
-          <span class="summary-item-qty">× ${item.qty}</span>
-        </div>
-      `).join('')}
-    </div>`;
-  }
+  const detailHtml = renderSummaryDetailsHtml(order.items);
 
   return `
     <div class="history-card" id="history-card-${index}">
@@ -107,22 +89,7 @@ export function copyHistoryOrder(index) {
   const order = history[index];
   if (!order) return;
 
-  // Group items
-  const grouped = {};
-  for (const item of order.items) {
-    const key = (item.emoji || '📦') + ' ' + (item.category || 'Diğer');
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(item);
-  }
-
-  let text = `📦 STOK TALEBİ — ${order.date} ${order.time}\n`;
-  for (const [catTitle, items] of Object.entries(grouped)) {
-    text += `\n${catTitle}\n`;
-    for (const item of items) {
-      text += `• ${item.name} → ${item.qty}\n`;
-    }
-  }
-  text += `\n━━━━━━━━━━━━━━━\nToplam: ${order.totalItems} kalem | ${order.totalQty} adet`;
+  const text = formatOrder(order);
 
   navigator.clipboard.writeText(text).then(() => {
     toast('📋 Geçmiş talep kopyalandı!', 'success');
@@ -144,13 +111,16 @@ export function repeatOrder(index) {
 }
 
 // ── Clear all history ──
-export function clearOrderHistory() {
-  if (!confirm('Tüm geçmiş silinecek. Emin misiniz?')) return;
-  clearHistory();
-  renderHistoryView();
-  toast('🗑️ Geçmiş temizlendi', 'success');
+export async function clearOrderHistory() {
+  const confirmed = await showConfirm({
+    title: '🗑️ Geçmişi Sil',
+    message: 'Tüm sipariş geçmişini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'
+  });
+  if (confirmed) {
+    clearHistory();
+    renderHistoryView();
+    toast('🗑️ Geçmiş temizlendi', 'success');
+  }
 }
 
-function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+

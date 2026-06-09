@@ -1,4 +1,5 @@
 // StokCU — Navigation & View Switching
+import { activeBlock, setActiveBlock } from '../state.js';
 
 let currentView = 'order';
 
@@ -34,4 +35,34 @@ export function updateClock() {
   if (!el) return;
   const now = new Date();
   el.textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── Block Modal Controls ──
+
+export function openBlockModal() {
+  const modal = document.getElementById('block-modal');
+  if (modal) modal.classList.add('active');
+}
+
+export function closeBlockModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  const modal = document.getElementById('block-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+export function selectBlock(block) {
+  setActiveBlock(block);
+  updateBlockHeaderBtn();
+  closeBlockModal();
+  import('./toast.js').then(({ toast }) => {
+    toast(`🏢 ${block} Bloğu seçildi.`, 'success');
+  });
+}
+
+export function updateBlockHeaderBtn() {
+  const btn = document.getElementById('header-block-btn');
+  if (btn) {
+    btn.textContent = activeBlock ? `Blok: ${activeBlock}` : 'Blok Seç';
+    btn.classList.toggle('selected', !!activeBlock);
+  }
 }

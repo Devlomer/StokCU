@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stokcu-v1';
+const CACHE_NAME = 'stokcu-v1.1';
 const ASSETS = [
   './',
   './index.html',
@@ -6,12 +6,16 @@ const ASSETS = [
   './css/base.css',
   './css/components.css',
   './js/main.js',
+  './js/utils.js',
   './js/config.js',
   './js/state.js',
+  './js/firebase.js',
+  './js/firebase-config.js',
   './js/ui/toast.js',
   './js/ui/navigation.js',
   './js/ui/views/order.js',
-  './js/ui/views/history.js'
+  './js/ui/views/history.js',
+  './js/ui/views/admin.js'
 ];
 
 self.addEventListener('install', (event) => {
