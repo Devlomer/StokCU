@@ -1,5 +1,11 @@
 // StokCU — Admin Portal View
-import { CATEGORIES, initOrderState, syncCategories } from '../../state.js';
+import { 
+  CATEGORIES, 
+  initOrderState, 
+  syncCategories, 
+  isAdmin, 
+  setAdminLoggedIn 
+} from '../../state.js';
 import { toast } from '../toast.js';
 import { escapeHtml, getBoxQtyString, showConfirm } from '../../utils.js';
 import { 
@@ -9,7 +15,6 @@ import {
   saveProductsToDb 
 } from '../../firebase.js';
 
-let isAdmin = false;
 let activeTab = 'requests'; // 'requests' | 'products'
 let rawRequests = [];
 let unsubscribeRequests = null;
@@ -74,7 +79,7 @@ export async function adminLogin() {
 
   const success = await verifyAdminPassword(pass);
   if (success) {
-    isAdmin = true;
+    setAdminLoggedIn(true);
     toast('Giriş başarılı!', 'success');
     
     // Deep clone categories for local editing
@@ -89,7 +94,7 @@ export async function adminLogin() {
 }
 
 export function adminLogout() {
-  isAdmin = false;
+  setAdminLoggedIn(false);
   if (unsubscribeRequests) {
     unsubscribeRequests();
     unsubscribeRequests = null;
@@ -107,13 +112,30 @@ export function setAdminTab(tab) {
   renderAdminView();
 }
 
-function startRequestsListener() {
+export function startRequestsListener() {
   if (unsubscribeRequests) unsubscribeRequests();
   unsubscribeRequests = listenToRequests((requests) => {
     rawRequests = requests;
     if (activeTab === 'requests' && isAdmin) {
       renderAdminView();
     }
+  });
+}
+
+// Helper: Sort items according to active configuration database order
+function sortItemsByConfig(items) {
+  const orderMap = {};
+  let index = 0;
+  for (const cat of CATEGORIES) {
+    for (const p of cat.products) {
+      const name = typeof p === 'string' ? p : p.name;
+      orderMap[name] = index++;
+    }
+  }
+  return [...items].sort((a, b) => {
+    const indexA = orderMap[a.name] !== undefined ? orderMap[a.name] : 9999;
+    const indexB = orderMap[b.name] !== undefined ? orderMap[b.name] : 9999;
+    return indexA - indexB;
   });
 }
 
@@ -145,29 +167,45 @@ function renderRequestsTab() {
     }
   }
 
-  // Group aggregated items by category for rendering
-  const groupedAggregated = {};
-  for (const [name, data] of Object.entries(aggregated)) {
-    const key = `${data.emoji} ${data.category}`;
-    if (!groupedAggregated[key]) groupedAggregated[key] = [];
-    groupedAggregated[key].push({ name, qty: data.qty, boxQty: data.boxQty });
+  // Group aggregated items by category for rendering, sorted by config
+  const groupedAggregated = [];
+  for (const cat of CATEGORIES) {
+    const items = [];
+    for (const p of cat.products) {
+      const pName = typeof p === 'string' ? p : p.name;
+      const pBoxQty = typeof p === 'string' ? 0 : p.boxQty;
+      if (aggregated[pName]) {
+        items.push({
+          name: pName,
+          qty: aggregated[pName].qty,
+          boxQty: pBoxQty
+        });
+      }
+    }
+    if (items.length > 0) {
+      groupedAggregated.push({
+        category: cat.name,
+        emoji: cat.emoji,
+        items
+      });
+    }
   }
 
   let html = `
     <!-- Toplam İhtiyaçlar (Preparation Board) -->
     <div class="admin-card-section">
-      <h3 class="section-title">📊 Toplam Hazırlanacak Ürünler</h3>
+      <h3 class="section-title" style="padding: 12px 12px 0; font-weight:700;">📊 Toplam Hazırlanacak Ürünler</h3>
       <div class="aggregated-box">
   `;
 
-  for (const [catTitle, items] of Object.entries(groupedAggregated)) {
+  for (const group of groupedAggregated) {
     html += `
-      <div class="agg-category">
-        <div class="agg-cat-title">${escapeHtml(catTitle)}</div>
-        ${items.map(item => `
-          <div class="agg-item">
-            <span class="agg-item-name">${escapeHtml(item.name)}</span>
-            <span class="agg-item-qty">${item.qty} adet${getBoxQtyString(item.qty, item.boxQty)}</span>
+      <div class="agg-category" style="margin-bottom:12px;">
+        <div class="agg-cat-title" style="font-size:11px; font-weight:700; color:var(--lujo-orange); margin-bottom:6px;">${group.emoji} ${escapeHtml(group.category)}</div>
+        ${group.items.map(item => `
+          <div class="agg-item" style="display:flex; justify-content:space-between; padding:4px 0 4px 8px; font-size:12.5px; border-bottom:1px solid rgba(255,255,255,0.02);">
+            <span class="agg-item-name" style="color:var(--t2);">${escapeHtml(item.name)}</span>
+            <span class="agg-item-qty" style="font-family:var(--font-mono); font-weight:700; color:var(--t1);"><b>${item.qty}</b> adet${getBoxQtyString(item.qty, item.boxQty)}</span>
           </div>
         `).join('')}
       </div>
@@ -179,29 +217,61 @@ function renderRequestsTab() {
     </div>
     
     <!-- Blok Talepleri Listesi -->
-    <h3 class="section-title" style="margin-top:20px; padding:0 8px;">🏢 Blok Talepleri (${rawRequests.length})</h3>
+    <h3 class="section-title" style="margin-top:20px; padding:0 8px;">🏢 Blok Talepleri</h3>
   `;
 
+  // Group requests by block
+  const requestsByBlock = {};
   for (const req of rawRequests) {
-    // Render individual request card
-    const itemsHtml = req.items.map(item => `
-      <div class="req-detail-item">
-        <span>• ${escapeHtml(item.name)}</span>
-        <span><b>${item.qty}</b> adet${getBoxQtyString(item.qty, item.boxQty)}</span>
-      </div>
-    `).join('');
+    if (!requestsByBlock[req.block]) {
+      requestsByBlock[req.block] = [];
+    }
+    requestsByBlock[req.block].push(req);
+  }
+
+  // Render grouped block requests
+  for (const [block, reqs] of Object.entries(requestsByBlock)) {
+    // Sort block requests by timestamp asc so oldest is first
+    const sortedReqs = [...reqs].sort((a, b) => a.timestamp - b.timestamp);
+
+    let cardBodyHtml = '';
+    for (let i = 0; i < sortedReqs.length; i++) {
+      const req = sortedReqs[i];
+      const sortedItems = sortItemsByConfig(req.items);
+      
+      const itemsHtml = sortedItems.map(item => `
+        <div class="req-detail-item" style="display:flex; justify-content:space-between; padding:4px 0; font-size:12px; color:var(--t2);">
+          <span>• ${escapeHtml(item.name)}</span>
+          <span><b>${item.qty}</b> adet${getBoxQtyString(item.qty, item.boxQty)}</span>
+        </div>
+      `).join('');
+
+      const titleLabel = i === 0 ? `Ana Talep (${req.time})` : `Ek Talep (${req.time})`;
+
+      cardBodyHtml += `
+        <div class="req-sub-group" style="${i > 0 ? 'margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border2);' : ''}">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <span class="req-sub-title" style="font-size:11px; font-weight:700; color: ${i === 0 ? 'var(--t2)' : 'var(--lujo-orange)'}">${titleLabel}</span>
+            <button class="btn-logout" style="padding: 2px 6px; font-size:9px;" onclick="window.app.completeRequest('${req.id}')">Kapat</button>
+          </div>
+          ${itemsHtml}
+        </div>
+      `;
+    }
+
+    const allIds = reqs.map(r => r.id).join(',');
 
     html += `
       <div class="admin-req-card">
         <div class="admin-req-card-header">
           <div>
-            <div class="admin-req-card-block">${req.block} Bloğu</div>
-            <div class="admin-req-card-time">${req.date} — ${req.time}</div>
+            <div class="admin-req-card-block">${block} Bloğu</div>
+            <div class="admin-req-card-meta" style="font-size:10px; color:var(--t3); margin-top:2px;">${reqs.length} talep aktif</div>
           </div>
-          <button class="btn-complete-req" onclick="window.app.completeRequest('${req.id}')">✓ Tamamlandı</button>
+          <button class="btn-complete-req" onclick="window.app.completeGroupRequest('${allIds}', '${block}')">✓ Tümünü Kapat</button>
         </div>
-        <div class="admin-req-card-body">
-          ${itemsHtml}
+        <div class="admin-req-card-body" style="padding:10px 14px;">
+          ${cardBodyHtml}
         </div>
       </div>
     `;
@@ -222,6 +292,25 @@ export async function completeRequest(requestId) {
     } catch (err) {
       console.error(err);
       toast('Talep silinemedi, interneti kontrol edin.', 'error');
+    }
+  }
+}
+
+export async function completeGroupRequest(idsString, blockName) {
+  const ids = idsString.split(',');
+  const confirmed = await showConfirm({
+    title: '✓ Grubu Kapat',
+    message: `"${blockName}" bloğuna ait tüm talepleri tamamlandı olarak işaretlemek istediğinize emin misiniz?`
+  });
+  if (confirmed) {
+    try {
+      for (const id of ids) {
+        await deleteRequestFromDb(id);
+      }
+      toast(`${blockName} bloğunun tüm talepleri kapatıldı.`, 'success');
+    } catch (err) {
+      console.error(err);
+      toast('Bazı talepler silinemedi, interneti kontrol edin.', 'error');
     }
   }
 }

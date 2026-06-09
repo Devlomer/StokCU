@@ -1364,3 +1364,32 @@
   line-height: 1.5;
 }
 
+/* ── ZEBRA STRIPING FOR GROUPED BLOCK REQUESTS ── */
+.admin-req-card:nth-of-type(odd) {
+  background: rgba(255, 255, 255, 0.01) !important;
+}
+
+.admin-req-card:nth-of-type(even) {
+  background: rgba(232, 99, 42, 0.02) !important; /* Lujo Orange Tint */
+}
+
+/* ── DISABLED CLEAR ALL BUTTON ── */
+.btn-clear-all:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  border-style: solid;
+}
+
+/* ── PIECES COUNT DYNAMIC LABELS ── */
+.product-pieces-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  background: rgba(92, 184, 122, 0.08);
+  border: 1px solid rgba(92, 184, 122, 0.15);
+  padding: 1px 6px;
+  border-radius: 6px;
+  display: inline-block;
+}
+

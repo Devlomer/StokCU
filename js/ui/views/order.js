@@ -1,21 +1,44 @@
 // StokCU — Order View (Product selection with accordion categories)
-import { CATEGORIES, activeBlock, getQty, setQty, getTotals, getSelectedItems, clearAll, saveToHistory } from '../../state.js';
+import { 
+  CATEGORIES, 
+  activeBlock, 
+  getQty, 
+  setQty, 
+  getTotals, 
+  getSelectedItems, 
+  clearAll, 
+  saveToHistory,
+  multiExpandMode,
+  setMultiExpandMode
+} from '../../state.js';
 import { toast } from '../toast.js';
 import { escapeHtml, formatOrder, renderSummaryDetailsHtml, showConfirm } from '../../utils.js';
 import { sendRequestToDb } from '../../firebase.js';
 
 let searchQuery = '';
+const collapsedCategories = new Set();
+let collapsedInitialized = false;
+
+function initializeCollapsedSet() {
+  if (!collapsedInitialized && CATEGORIES.length > 0) {
+    for (const cat of CATEGORIES) {
+      collapsedCategories.add(cat.id);
+    }
+    collapsedInitialized = true;
+  }
+}
 
 // ── Render the full order view ──
 export function renderOrderView() {
   const container = document.getElementById('view-order');
   if (!container) return;
 
+  initializeCollapsedSet();
   const { totalItems } = getTotals();
 
   let html = '';
 
-  // Search bar
+  // Search bar & Multi-Expand toggle
   html += `
     <div class="search-container">
       <div class="search-wrapper">
@@ -27,14 +50,20 @@ export function renderOrderView() {
         <button class="search-clear ${searchQuery ? 'visible' : ''}"
                 onclick="window.app.clearSearch()">✕</button>
       </div>
+      <div class="multi-expand-wrapper" style="margin-top: 8px; display: flex; align-items: center; justify-content: flex-end; padding: 0 4px;">
+        <label class="multi-expand-label" style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--t3); cursor: pointer; user-select: none;">
+          <input type="checkbox" id="multi-expand-toggle" ${multiExpandMode ? 'checked' : ''} onchange="window.app.handleMultiExpandToggle(this.checked)" style="accent-color: var(--lujo-orange); cursor: pointer;">
+          <span>Çoklu Kategori Modu</span>
+        </label>
+      </div>
     </div>
   `;
 
-  // Clear all button
+  // Clear all button (always visible, disabled if totalItems is 0)
   html += `
-    <div class="clear-all-container ${totalItems > 0 ? 'visible' : ''}" id="clear-all-bar">
-      <button class="btn-clear-all" onclick="window.app.clearAllQty()">
-        🗑️ Tümünü Temizle (${totalItems} ürün seçili)
+    <div class="clear-all-container visible" id="clear-all-bar">
+      <button class="btn-clear-all" onclick="window.app.clearAllQty()" ${totalItems === 0 ? 'disabled' : ''}>
+        🗑️ Tümünü Temizle ${totalItems > 0 ? `(${totalItems} ürün seçili)` : ''}
       </button>
     </div>
   `;
@@ -89,21 +118,26 @@ export function renderOrderView() {
 function renderProductItem(p) {
   const name = typeof p === 'string' ? p : p.name;
   const boxQty = typeof p === 'string' ? 0 : p.boxQty;
+  const bQty = boxQty || 1;
+
   const qty = getQty(name);
+  const boxes = Math.floor(qty / bQty);
   const hasQty = qty > 0;
   const productId = nameToId(name);
   const boxText = boxQty > 0 ? `<span class="product-box-qty">(${boxQty}'li Koli)</span>` : '';
+  const piecesText = qty > 0 ? `<span class="product-pieces-count">${qty} adet</span>` : '';
 
   return `
     <div class="product-item ${hasQty ? 'has-qty' : ''}" id="product-${productId}">
       <div class="product-name">
         ${escapeHtml(name)}
         ${boxText}
+        <div class="pieces-wrapper" style="margin-top:2px;">${piecesText}</div>
       </div>
       <div class="qty-control">
         <button class="qty-btn minus" onclick="window.app.changeQty('${escapeAttr(name)}', -1)" ${!hasQty ? 'style="opacity:.3;pointer-events:none"' : ''}>−</button>
         <input type="number" class="qty-input ${hasQty ? 'active' : ''}" id="qty-${productId}" 
-               value="${qty}" onfocus="this.select()"
+               value="${boxes}" onfocus="this.select()"
                onchange="window.app.handleQtyInputChange('${escapeAttr(name)}', this.value)" min="0">
         <button class="qty-btn plus" onclick="window.app.changeQty('${escapeAttr(name)}', 1)">+</button>
       </div>
@@ -111,11 +145,44 @@ function renderProductItem(p) {
   `;
 }
 
+// ── Accordion Toggle Mode Handler ──
+export function handleMultiExpandToggle(checked) {
+  setMultiExpandMode(checked);
+  if (!checked) {
+    // Collapse all except the first expanded category
+    let openedOne = false;
+    for (const cat of CATEGORIES) {
+      if (!collapsedCategories.has(cat.id)) {
+        if (openedOne) {
+          collapsedCategories.add(cat.id);
+        } else {
+          openedOne = true;
+        }
+      }
+    }
+  }
+  renderOrderView();
+}
+
 // ── Quantity Change & Manual Editing ──
+function findProductByName(name) {
+  for (const cat of CATEGORIES) {
+    for (const p of cat.products) {
+      if ((typeof p === 'string' ? p : p.name) === name) {
+        return p;
+      }
+    }
+  }
+  return null;
+}
+
 export function changeQty(name, delta) {
+  const product = findProductByName(name);
+  const boxQty = (product && product.boxQty) || 1;
+
   const oldQty = getQty(name);
-  const newQty = Math.max(0, oldQty + delta);
-  setProductQtyDirectly(name, newQty);
+  const newQty = Math.max(0, oldQty + (delta * boxQty));
+  updateQtyStateAndUI(name, newQty);
 
   // Pulse animation on quantity change
   const productId = nameToId(name);
@@ -127,26 +194,44 @@ export function changeQty(name, delta) {
   }
 }
 
-export function setProductQtyDirectly(name, qty) {
-  const newQty = Math.max(0, qty);
-  setQty(name, newQty);
+export function handleQtyInputChange(name, value) {
+  const product = findProductByName(name);
+  const boxQty = (product && product.boxQty) || 1;
+  const boxes = Math.max(0, parseInt(value, 10) || 0);
+  const newQty = boxes * boxQty;
+  updateQtyStateAndUI(name, newQty);
+}
+
+export function updateQtyStateAndUI(name, qty) {
+  setQty(name, qty);
+
+  const product = findProductByName(name);
+  const boxQty = (product && product.boxQty) || 1;
+  const boxes = Math.floor(qty / boxQty);
 
   const productId = nameToId(name);
   const itemEl = document.getElementById('product-' + productId);
   const qtyEl = document.getElementById('qty-' + productId);
 
   if (qtyEl) {
-    qtyEl.value = newQty;
-    qtyEl.classList.toggle('active', newQty > 0);
+    qtyEl.value = boxes;
+    qtyEl.classList.toggle('active', qty > 0);
   }
 
   if (itemEl) {
-    itemEl.classList.toggle('has-qty', newQty > 0);
+    itemEl.classList.toggle('has-qty', qty > 0);
+    
+    // Update pieces count text dynamically
+    const pWrapper = itemEl.querySelector('.pieces-wrapper');
+    if (pWrapper) {
+      pWrapper.innerHTML = qty > 0 ? `<span class="product-pieces-count">${qty} adet</span>` : '';
+    }
+
     // Update minus button
     const minusBtn = itemEl.querySelector('.qty-btn.minus');
     if (minusBtn) {
-      minusBtn.style.opacity = newQty > 0 ? '' : '.3';
-      minusBtn.style.pointerEvents = newQty > 0 ? '' : 'none';
+      minusBtn.style.opacity = qty > 0 ? '' : '.3';
+      minusBtn.style.pointerEvents = qty > 0 ? '' : 'none';
     }
   }
 
@@ -193,9 +278,12 @@ function updateClearAllBar() {
   const bar = document.getElementById('clear-all-bar');
   const { totalItems } = getTotals();
   if (bar) {
-    bar.classList.toggle('visible', totalItems > 0);
+    bar.classList.toggle('visible', true); // always show clear all bar
     const btn = bar.querySelector('.btn-clear-all');
-    if (btn) btn.textContent = '🗑️ Tümünü Temizle (' + totalItems + ' ürün seçili)';
+    if (btn) {
+      btn.disabled = totalItems === 0;
+      btn.textContent = '🗑️ Tümünü Temizle' + (totalItems > 0 ? ' (' + totalItems + ' ürün seçili)' : '');
+    }
   }
 }
 
@@ -234,18 +322,26 @@ function normalizeForSearch(str) {
 }
 
 // ── Category Toggle ──
-const collapsedCategories = new Set();
-
 export function toggleCategory(catId) {
-  if (collapsedCategories.has(catId)) {
+  initializeCollapsedSet();
+  const isCurrentlyCollapsed = collapsedCategories.has(catId);
+
+  if (isCurrentlyCollapsed) {
+    // Open it
+    if (!multiExpandMode) {
+      // Collapse everything else
+      collapsedCategories.clear();
+      for (const cat of CATEGORIES) {
+        collapsedCategories.add(cat.id);
+      }
+    }
     collapsedCategories.delete(catId);
   } else {
+    // Collapse it
     collapsedCategories.add(catId);
   }
-  const section = document.getElementById('cat-' + catId);
-  if (section) {
-    section.classList.toggle('collapsed');
-  }
+  
+  renderOrderView();
 }
 
 function isCategoryCollapsed(catId) {

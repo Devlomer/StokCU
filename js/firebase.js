@@ -27,20 +27,19 @@ export async function saveProductsToDb(categories) {
   await db.ref('stokcu/config/categories').set(categories);
 }
 
-// ── Admin Password ──
-
 export async function verifyAdminPassword(enteredPassword) {
   try {
-    const snapshot = await db.ref('stokcu/config/adminPassword').once('value');
-    const dbPassword = snapshot.val();
-    if (dbPassword) {
-      return dbPassword === enteredPassword;
+    const fs = window.firebase.firestore();
+    const docRef = fs.collection('config').doc('admin');
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      return data && data.password === enteredPassword;
     }
   } catch (err) {
-    console.warn('Firebase verifyAdmin error:', err);
+    console.warn('Firebase verifyAdmin Firestore error:', err);
   }
-  // Fallback default
-  return enteredPassword === 'lujo2026';
+  return false;
 }
 
 // ── Orders/Requests: Push & Listen ──

@@ -1,5 +1,5 @@
 // StokCU — Navigation & View Switching
-import { activeBlock, setActiveBlock } from '../state.js';
+import { activeBlock, setActiveBlock, isAdmin } from '../state.js';
 
 let currentView = 'order';
 
@@ -13,15 +13,21 @@ export function switchView(viewName) {
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.add('active');
 
-  // Update nav buttons
+  // Update nav buttons and hide based on admin status
   document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.view === viewName);
+    const view = btn.dataset.view;
+    btn.classList.toggle('active', view === viewName);
+    if (isAdmin) {
+      btn.style.display = view === 'admin' ? '' : 'none';
+    } else {
+      btn.style.display = '';
+    }
   });
 
   // Show/hide FAB only on order view
   const fab = document.getElementById('fab-container');
   if (fab) {
-    fab.style.display = viewName === 'order' ? '' : 'none';
+    fab.style.display = (viewName === 'order' && !isAdmin) ? '' : 'none';
   }
 }
 
@@ -62,7 +68,12 @@ export function selectBlock(block) {
 export function updateBlockHeaderBtn() {
   const btn = document.getElementById('header-block-btn');
   if (btn) {
-    btn.textContent = activeBlock ? `Blok: ${activeBlock}` : 'Blok Seç';
-    btn.classList.toggle('selected', !!activeBlock);
+    if (isAdmin) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+      btn.textContent = activeBlock ? `Blok: ${activeBlock}` : 'Blok Seç';
+      btn.classList.toggle('selected', !!activeBlock);
+    }
   }
 }

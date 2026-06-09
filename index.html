@@ -21,14 +21,14 @@
   <!-- Header -->
   <header class="app-header">
     <div class="header-left-brand">
-      <div class="joyops-logo">
+      <div class="joyops-logo" style="cursor: pointer;" onclick="window.location.reload()">
         <span class="logo-j-container">
           <span class="logo-dot"></span>
           <span class="logo-j">ȷ</span>
         </span><span class="logo-oy">oy</span><span class="logo-ops">ops</span>
       </div>
       <span class="logo-separator">|</span>
-      <h1>StokCU <span class="app-version">v1.1</span></h1>
+      <h1>StokCU <span class="app-version">v1.3</span></h1>
     </div>
     <div class="header-right">
       <button class="header-block-btn" id="header-block-btn" onclick="window.app.openBlockModal()">Blok Seç</button>
@@ -118,6 +118,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
   <script type="module" src="js/main.js"></script>
 

@@ -4,7 +4,8 @@ import {
   loadActiveOrderFromStorage, 
   activeBlock, 
   CATEGORIES, 
-  syncCategories 
+  syncCategories,
+  isAdmin
 } from './state.js';
 import { 
   switchView, 
@@ -34,26 +35,34 @@ function initApp() {
   loadActiveOrderFromStorage();
   initOrderState();
 
-  // Render initial view
-  switchView('order');
-  order.renderOrderView();
-
   // Clock
   updateClock();
   setInterval(updateClock, 15000);
 
-  // Setup active block header
-  updateBlockHeaderBtn();
-
-  // Show block select modal if not selected
-  if (!activeBlock) {
-    setTimeout(openBlockModal, 600);
+  // Setup active block header and view based on persistent login
+  if (isAdmin) {
+    switchView('admin');
+    admin.renderAdminView();
+    admin.startRequestsListener();
+  } else {
+    switchView('order');
+    order.renderOrderView();
+    updateBlockHeaderBtn();
+    
+    // Show block select modal if not selected
+    if (!activeBlock) {
+      setTimeout(openBlockModal, 600);
+    }
   }
 
   // Sync categories from Firebase Realtime DB
   syncCategories().then((synced) => {
     if (synced) {
-      order.renderOrderView();
+      if (isAdmin) {
+        admin.renderAdminView();
+      } else {
+        order.renderOrderView();
+      }
     }
   });
 }
@@ -75,10 +84,11 @@ window.app = {
 
   // Order View
   changeQty: order.changeQty,
-  handleQtyInputChange: order.setProductQtyDirectly,
+  handleQtyInputChange: order.handleQtyInputChange,
   handleSearch: order.handleSearch,
   clearSearch: order.clearSearch,
   toggleCategory: order.toggleCategory,
+  handleMultiExpandToggle: order.handleMultiExpandToggle,
   clearAllQty: order.clearAllQty,
   openSummaryModal: order.openSummaryModal,
   closeSummaryModal: order.closeSummaryModal,
@@ -97,6 +107,7 @@ window.app = {
   adminLogout: admin.adminLogout,
   setAdminTab: admin.setAdminTab,
   completeRequest: admin.completeRequest,
+  completeGroupRequest: admin.completeGroupRequest,
   
   // Product Configurations
   updateCategoryMeta: admin.updateCategoryMeta,

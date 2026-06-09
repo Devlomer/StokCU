@@ -16,6 +16,27 @@ export function setActiveBlock(block) {
   localStorage.setItem(STORAGE_KEY + '_block', block);
 }
 
+// Persist Admin Login state
+export let isAdmin = localStorage.getItem(STORAGE_KEY + '_is_admin') === 'true';
+
+export function setAdminLoggedIn(value) {
+  isAdmin = value;
+  localStorage.setItem(STORAGE_KEY + '_is_admin', value ? 'true' : 'false');
+  // Update UI components when admin state changes
+  import('./ui/navigation.js').then((nav) => {
+    nav.updateBlockHeaderBtn();
+    nav.switchView(value ? 'admin' : 'order');
+  });
+}
+
+// Persist Multi-Expand setting
+export let multiExpandMode = localStorage.getItem(STORAGE_KEY + '_multi_expand') === 'true';
+
+export function setMultiExpandMode(value) {
+  multiExpandMode = value;
+  localStorage.setItem(STORAGE_KEY + '_multi_expand', value ? 'true' : 'false');
+}
+
 // Sync categories list with Firebase database
 export async function syncCategories() {
   const dbCats = await fetchProductsFromDb();

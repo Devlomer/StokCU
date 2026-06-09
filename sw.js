@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stokcu-v1.1';
+const CACHE_NAME = 'stokcu-v1.3';
 const ASSETS = [
   './',
   './index.html',
