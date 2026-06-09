@@ -1,0 +1,148 @@
+/* ==========================================================================
+   StokCU — Base Styles & Design Tokens (Lujo Brand)
+   ========================================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  /* Lujo brand colors */
+  --lujo-orange: #E8632A;
+  --lujo-orange-warm: #F28044;
+  --lujo-orange-muted: rgba(232, 99, 42, 0.15);
+  --lujo-charcoal: #1E1E1E;
+  --lujo-stone: #8B7D6B;
+  --lujo-sand: #F5F0E8;
+  --lujo-cream: #FDFAF5;
+  --lujo-aegean: #5BA4C9;
+  --lujo-aegean-light: rgba(91, 164, 201, 0.12);
+  --lujo-success: #5CB87A;
+  --lujo-success-light: rgba(92, 184, 122, 0.12);
+  --lujo-white: #FFFFFF;
+  --lujo-gold: #C9A84C;
+  --lujo-danger: #E85A4F;
+  --lujo-danger-light: rgba(232, 90, 79, 0.12);
+
+  /* Dark mode semantic */
+  --bg: #0E0C10;
+  --bg2: rgba(28, 25, 35, 0.85);
+  --card: rgba(28, 25, 35, 0.45);
+  --card-solid: #1c1923;
+  --input: rgba(38, 34, 46, 0.8);
+  --modal-bg: rgba(14, 12, 16, 0.95);
+  --t1: #F0EBE3;
+  --t2: #A89F91;
+  --t3: rgba(168, 159, 145, 0.5);
+
+  /* Semantic colors */
+  --green: var(--lujo-success);
+  --green-bg: var(--lujo-success-light);
+  --red: var(--lujo-danger);
+  --red-bg: var(--lujo-danger-light);
+  --blue: var(--lujo-aegean);
+  --blue-bg: var(--lujo-aegean-light);
+  --gray: #6b7280;
+  --gray-bg: rgba(107, 114, 128, .12);
+  --yellow: var(--lujo-orange-warm);
+  --yellow-bg: var(--lujo-orange-muted);
+  --accent: var(--lujo-orange);
+  --accent-bg: var(--lujo-orange-muted);
+
+  /* Layout */
+  --border: rgba(255, 255, 255, .06);
+  --border2: rgba(255, 255, 255, .12);
+  --shadow: 0 8px 32px rgba(0, 0, 0, .4);
+  --r: 16px;
+  --rs: 12px;
+  --rx: 8px;
+  --nav: 64px;
+  --hdr: 52px;
+  --sab: env(safe-area-inset-bottom, 0px);
+  --fab-height: 64px;
+
+  /* Fonts */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--t1);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.2px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .1);
+  border-radius: 3px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 99, 42, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(232, 99, 42, 0); }
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes countPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

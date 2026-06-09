@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0E0C10">
+  <meta name="description" content="StokCU — Minibar depo stok talep uygulaması">
+  <title>StokCU</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left-brand">
+      <div class="joyops-logo">
+        <span class="logo-j-container">
+          <span class="logo-dot"></span>
+          <span class="logo-j">ȷ</span>
+        </span><span class="logo-oy">oy</span><span class="logo-ops">ops</span>
+      </div>
+      <span class="logo-separator">|</span>
+      <h1>StokCU <span class="app-version">v1.0</span></h1>
+    </div>
+    <div class="header-right">
+      <span id="header-clock" class="header-clock"></span>
+    </div>
+  </header>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Main Content -->
+  <div class="app-content">
+
+    <!-- VIEW: Sipariş Oluşturma -->
+    <section id="view-order" class="view"></section>
+
+    <!-- VIEW: Geçmiş Talepler -->
+    <section id="view-history" class="view"></section>
+
+  </div>
+
+  <!-- Floating Action Bar -->
+  <div class="fab-container" id="fab-container">
+    <button class="fab-btn" onclick="window.app.openSummaryModal()">
+      📦 Talep Oluştur
+      <span class="fab-badge" id="fab-badge">0</span>
+    </button>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-btn" data-view="order" onclick="window.app.switchView('order')">📦<span>Sipariş</span></button>
+    <button class="nav-btn" data-view="history" onclick="window.app.switchView('history')">📜<span>Geçmiş</span></button>
+  </nav>
+
+  <!-- Summary Modal -->
+  <div id="summary-modal" class="modal-overlay" onclick="window.app.closeSummaryModal(event)">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <div class="sheet-handle"></div>
+        <button class="sheet-close-btn" onclick="window.app.closeSummaryModal()">✕</button>
+      </div>
+      <div class="sheet-title">📦 Stok Talebi</div>
+      <div class="sheet-subtitle" id="summary-date"></div>
+      <div class="sheet-body" id="summary-body"></div>
+      <div class="sheet-actions">
+        <button class="btn-copy" id="btn-copy" onclick="window.app.copyOrder()">📋 Panoya Kopyala</button>
+        <button class="btn-clear" onclick="window.app.clearAndClose()">🗑️ Temizle & Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .catch(err => console.log('SW Registration Error:', err));
+    }
+  </script>
+</body>
+</html>
